@@ -1,0 +1,201 @@
+{{if .ProtoFile.JavaPackage}}package {{.ProtoFile.JavaPackage}};
+{{end}}
+public class {{.JavaOuterClassName}} {
+  private static final String PROTOBUF_CONTENT_TYPE = "application/protobuf";
+  private static final String JSON_CONTENT_TYPE = "application/json";
+
+  {{range .ProtoFile.Services}}
+  public interface {{.JavaClassName}} {
+    {{range .Methods}}
+    {{.JavaMethod}};
+    {{end}}
+  }
+  {{end}}
+
+  {{if or .Options.GenerateHelidonServer .Options.GenerateHelidonClient}}
+  public static class Helidon {
+    private static final io.helidon.common.http.MediaType PROTOBUF_MEDIA_TYPE =
+        io.helidon.common.http.MediaType.parse(PROTOBUF_CONTENT_TYPE);
+    private static final io.helidon.common.http.MediaType JSON_MEDIA_TYPE =
+        io.helidon.common.http.MediaType.parse(JSON_CONTENT_TYPE);
+    {{if .Options.GenerateHelidonClient}}
+    public static class Client {
+      private abstract static class AbstractService {
+        private final io.helidon.webclient.WebClient webClient;
+        private final io.helidon.common.http.MediaType contentType;
+
+        public AbstractService(String baseUri, io.helidon.common.http.MediaType contentType) {
+          super();
+
+          webClient = io.helidon.webclient.WebClient.builder().baseUri(baseUri).build();
+          this.contentType = contentType;
+        }
+
+        protected void doRequest(
+            String path,
+            com.google.protobuf.Message input,
+            com.google.protobuf.Message.Builder outputBuilder) {
+          if (contentType.equals(PROTOBUF_MEDIA_TYPE)) {
+            doProtobufRequest(path, input, outputBuilder);
+          } else if (contentType.equals(JSON_MEDIA_TYPE)) {
+            doJsonRequest(path, input, outputBuilder);
+          } else {
+            throw new IllegalArgumentException("unsupported content type");
+          }
+        }
+
+        private void doProtobufRequest(
+            String path,
+            com.google.protobuf.Message input,
+            com.google.protobuf.Message.Builder outputBuilder) {
+          try {
+            webClient
+                .post()
+                .path(path)
+                .contentType(io.helidon.common.http.MediaType.parse(PROTOBUF_CONTENT_TYPE))
+                .submit(input.toByteArray(), byte[].class)
+                .map(
+                    responseBytes -> {
+                      try {
+                        return outputBuilder.mergeFrom(responseBytes);
+                      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                      }
+                    })
+                .get();
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          } catch (java.util.concurrent.ExecutionException e) {
+            throw new RuntimeException(e.getCause());
+          }
+        }
+
+        private void doJsonRequest(
+            String path,
+            com.google.protobuf.Message input,
+            com.google.protobuf.Message.Builder outputBuilder) {
+          try {
+            final String requestJson = com.google.protobuf.util.JsonFormat.printer().print(input);
+            webClient
+                .post()
+                .path(path)
+                .contentType(io.helidon.common.http.MediaType.parse(JSON_CONTENT_TYPE))
+                .submit(requestJson, String.class)
+                .map(
+                    responseJson -> {
+                      try {
+                          com.google.protobuf.util.JsonFormat.parser().merge(responseJson, outputBuilder);
+                        return outputBuilder;
+                      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                      }
+                    })
+                .get();
+          } catch (InterruptedException | com.google.protobuf.InvalidProtocolBufferException e) {
+            throw new RuntimeException(e);
+          } catch (java.util.concurrent.ExecutionException e) {
+            throw new RuntimeException(e.getCause());
+          }
+        }
+      }
+      {{range .ProtoFile.Services}}
+      public static class {{.JavaClassName}} extends AbstractService implements {{$.JavaOuterClassName}}.{{.JavaClassName}} {
+        private {{.JavaClassName}}(String baseUri, io.helidon.common.http.MediaType contentType) {
+          super(baseUri, contentType);
+        }
+
+        public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newProtobufClient(String baseUri) {
+          return new {{.JavaClassName}}(baseUri, PROTOBUF_MEDIA_TYPE);
+        }
+
+        public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newJSONClient(String baseUri) {
+          return new {{.JavaClassName}}(baseUri, JSON_MEDIA_TYPE);
+        }
+        {{range .Methods}}
+        {{$requestType := (index .JavaMethod.Arguments 0).Type}}
+        @Override
+        public {{.JavaMethod.ReturnType}} {{.JavaMethod.Name}}({{$requestType}} input) {
+          final {{.JavaMethod.ReturnType}}.Builder outputBuilder = {{.JavaMethod.ReturnType}}.newBuilder();
+          doRequest("{{.TwirpPath}}", input, outputBuilder);
+          return outputBuilder.build();
+        }
+        {{end}}
+      }
+      {{end}}
+    }
+    {{end}}
+    {{if .Options.GenerateHelidonServer}}
+    public static class Server {
+      {{range .ProtoFile.Services}}
+      public static class {{.JavaClassName}} {
+        public static void update(io.helidon.webserver.Routing.Rules rules, {{$.JavaOuterClassName}}.{{.JavaClassName}} service) {
+          {{range .Methods}}
+          {{$requestType := (index .JavaMethod.Arguments 0).Type}}
+          rules.post("{{.TwirpPath}}", (req, res) -> {
+            final {{$requestType}}.Builder requestBuilder = {{$requestType}}.newBuilder();
+            handleTwirp(req, res, requestBuilder, () -> service.{{.JavaMethod.Name}}(requestBuilder.build()));
+          });
+          {{end}}
+        }
+      }
+      {{end}}
+      private static void handleTwirp(
+          io.helidon.webserver.ServerRequest req,
+          io.helidon.webserver.ServerResponse res,
+          com.google.protobuf.Message.Builder messageBuilder,
+          java.util.function.Supplier<com.google.protobuf.Message> serviceInvoker) {
+        if (req.headers().contentType().isEmpty()) {
+          res.status(io.helidon.common.http.Http.Status.BAD_REQUEST_400)
+              .send("Content-Type not specified");
+          return;
+        }
+        final io.helidon.common.http.MediaType contentType = req.headers().contentType().get();
+        if (contentType.equals(PROTOBUF_MEDIA_TYPE)) {
+          req.content()
+              .as(byte[].class)
+              .thenAccept(
+                  contentBytes -> {
+                    try {
+                      messageBuilder.mergeFrom(contentBytes);
+                      final com.google.protobuf.Message response = serviceInvoker.get();
+                      res.headers().contentType(contentType);
+                      res.send(response.toByteArray());
+                    } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                      res.status(io.helidon.common.http.Http.Status.BAD_REQUEST_400)
+                          .send("Malformed content");
+                    } catch (Exception e) {
+                      res.status(io.helidon.common.http.Http.Status.INTERNAL_SERVER_ERROR_500)
+                          .send(e.toString());
+                    }
+                  });
+        } else if (contentType.equals(JSON_MEDIA_TYPE)) {
+          req.content()
+              .as(String.class)
+              .thenAccept(
+                  contentString -> {
+                    try {
+                      com.google.protobuf.util.JsonFormat.parser()
+                          .merge(contentString, messageBuilder);
+                      final com.google.protobuf.Message response = serviceInvoker.get();
+                      final String json =
+                          com.google.protobuf.util.JsonFormat.printer().print(response);
+                      res.headers().contentType(contentType);
+                      res.send(json);
+                    } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                      res.status(io.helidon.common.http.Http.Status.BAD_REQUEST_400)
+                          .send("Malformed content");
+                    } catch (Exception e) {
+                      res.status(io.helidon.common.http.Http.Status.INTERNAL_SERVER_ERROR_500)
+                          .send(e.toString());
+                    }
+                  });
+        } else {
+          res.status(io.helidon.common.http.Http.Status.BAD_REQUEST_400)
+              .send("Content-Type not supported");
+        }
+      }
+    }
+    {{end}}
+  }
+  {{end}}
+}
