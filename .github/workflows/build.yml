@@ -12,15 +12,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: "~1.21"
+          go-version: ~1.21
 
       - name: Download packages
         run: go mod download
 
       - name: Build
         run: go build ./...
+
+      - name: Install
+        run: go install .
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
+        with:
+          version: 25.1
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: ngyewch/protoc-gen-twirp-java-example
+          path: ./protoc-gen-twirp-java-example
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+
+      - name: Generate Twirp sources
+        run: |
+          mkdir -p ${OUTPUT_DIR}
+          protoc --proto_path=${PB_DIR} \
+            --twirp-java_out=${OUTPUT_DIR} \
+            --twirp-java_opt=gen-helidon-client=true \
+            --twirp-java_opt=gen-helidon-server=true \
+            service.proto
+        working-directory: ./protoc-gen-twirp-java-example
+        env:
+          PB_DIR: src/main/proto
+          OUTPUT_DIR: build/generated/source/protoc-gen-twirp-java/main/java
+
+      - name: Build Java project
+        run: ./gradlew build
+        working-directory: ./protoc-gen-twirp-java-example
