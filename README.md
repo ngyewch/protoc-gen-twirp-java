@@ -1,1 +1,50 @@
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/ngyewch/protoc-gen-twirp-java/build.yml)
+![GitHub tag (with filter)](https://img.shields.io/github/v/tag/ngyewch/protoc-gen-twirp-java)
+
 # protoc-gen-twirp-java
+
+[Twirp](https://github.com/twitchtv/twirp) protobuf generator for Java.
+
+## Installation
+
+```
+go install github.com/ngyewch/protoc-gen-twirp-java@latest
+```
+
+## Running
+
+### Command-line
+
+```
+mkdir -p ${OUTPUT_DIR}
+protoc --proto_path=${PB_DIR} \
+    --twirp-java_out=${OUTPUT_DIR} \
+    --twirp-java_opt=gen-helidon-client=true \
+    --twirp-java_opt=gen-helidon-server=true \
+    ${PB_FILE}
+```
+
+### Via Docker
+
+```
+docker build --tag go-protoc-twirp-java:latest https://github.com/ngyewch/protoc-gen-twirp-java.git
+
+mkdir -p ${OUTPUT_DIR}
+docker run --rm -it \
+    --user $(id -u):$(id -g) \
+    -v ${PB_DIR}:/protobuf \
+    -v ${OUTPUT_DIR}:/build \
+    go-protoc-twirp-java:latest \
+    protoc --proto_path=/protobuf \
+    --twirp-java_out=/build \
+    --twirp-java_opt=gen-helidon-client=true \
+    --twirp-java_opt=gen-helidon-server=true \
+    ${PB_FILE}
+```
+
+## Options
+
+| Name                 | Type      | Default | Description                                                                                            |
+|----------------------|-----------|---------|--------------------------------------------------------------------------------------------------------|
+| `gen-helidon-client` | `boolean` | `false` | Generate [Helidon SE WebClient based](https://helidon.io/docs/v2/se/webclient/01_introduction) client. | 
+| `gen-helidon-server` | `boolean` | `false` | Generate [Helidon SE WebServer based](https://helidon.io/docs/v2/se/webserver/01_introduction) server. | 
