@@ -28,7 +28,7 @@ jobs:
       - name: Install
         run: go install .
 
-      - name: Install Protoc
+      - name: Setup protoc
         uses: arduino/setup-protoc@v2
         with:
           version: 25.1
@@ -39,7 +39,8 @@ jobs:
           repository: ngyewch/protoc-gen-twirp-java-example
           path: ./protoc-gen-twirp-java-example
 
-      - uses: actions/setup-java@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 11
