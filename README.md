@@ -5,6 +5,10 @@
 
 [Twirp](https://github.com/twitchtv/twirp) protobuf generator for Java.
 
+## Example project
+
+See [github.com/ngyewch/protoc-gen-twirp-java-example](https://github.com/ngyewch/protoc-gen-twirp-java-example)
+
 ## Installation
 
 ```
