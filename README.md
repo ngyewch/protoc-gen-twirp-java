@@ -5,6 +5,10 @@
 
 [Twirp](https://github.com/twitchtv/twirp) protobuf generator for Java.
 
+## Usage notes
+
+**IMPORTANT** Declare `option go_package` in your `.proto` files even if you do not plan to generate Go source.
+
 ## Example project
 
 See [github.com/ngyewch/protoc-gen-twirp-java-example](https://github.com/ngyewch/protoc-gen-twirp-java-example)
