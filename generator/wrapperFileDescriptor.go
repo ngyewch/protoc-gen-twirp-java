@@ -17,12 +17,15 @@ type FileDescriptorWrapper struct {
 }
 
 func WrapFileDescriptor(fd protoreflect.FileDescriptor, includeServices bool) FileDescriptorWrapper {
-	javaPackage := ""
+	javaPackage := string(fd.Package())
 	javaOuterClassName := filenameToJavaClassName(fd.Path())
 	javaMultipleFiles := false
 	options, ok := fd.Options().(*descriptorpb.FileOptions)
 	if ok {
-		javaPackage = options.GetJavaPackage()
+		javaPackage1 := options.GetJavaPackage()
+		if javaPackage1 != "" {
+			javaPackage = javaPackage1
+		}
 		javaOuterClassName1 := options.GetJavaOuterClassname()
 		if javaOuterClassName1 != "" {
 			javaOuterClassName = JavaClassName(javaOuterClassName1)
