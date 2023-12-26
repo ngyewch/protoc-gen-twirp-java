@@ -7,7 +7,9 @@ public class {{.JavaOuterClassName}} {
   {{range .ProtoFile.Services}}
   public interface {{.JavaClassName}} {
     {{range .Methods}}
+    {{if not (or .Descriptor.IsStreamingClient .Descriptor.IsStreamingServer)}}
     {{.JavaMethod}};
+    {{end}}
     {{end}}
   }
   {{end}}
@@ -112,6 +114,7 @@ public class {{.JavaOuterClassName}} {
           return new {{.JavaClassName}}(baseUri, JSON_MEDIA_TYPE);
         }
         {{range .Methods}}
+        {{if not (or .Descriptor.IsStreamingClient .Descriptor.IsStreamingServer)}}
         {{$requestType := (index .JavaMethod.Arguments 0).Type}}
         @Override
         public {{.JavaMethod.ReturnType}} {{.JavaMethod.Name}}({{$requestType}} input) {
@@ -119,6 +122,7 @@ public class {{.JavaOuterClassName}} {
           doRequest("{{.TwirpPath}}", input, outputBuilder);
           return outputBuilder.build();
         }
+        {{end}}
         {{end}}
       }
       {{end}}
@@ -130,11 +134,13 @@ public class {{.JavaOuterClassName}} {
       public static class {{.JavaClassName}} {
         public static void update(io.helidon.webserver.Routing.Rules rules, {{$.JavaOuterClassName}}.{{.JavaClassName}} service) {
           {{range .Methods}}
+          {{if not (or .Descriptor.IsStreamingClient .Descriptor.IsStreamingServer)}}
           {{$requestType := (index .JavaMethod.Arguments 0).Type}}
           rules.post("{{.TwirpPath}}", (req, res) -> {
             final {{$requestType}}.Builder requestBuilder = {{$requestType}}.newBuilder();
             handleTwirp(req, res, requestBuilder, () -> service.{{.JavaMethod.Name}}(requestBuilder.build()));
           });
+          {{end}}
           {{end}}
         }
       }

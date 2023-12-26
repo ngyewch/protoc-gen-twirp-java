@@ -28,6 +28,10 @@ func (w ServiceDescriptorWrapper) Name() string {
 	return string(w.sd.Name())
 }
 
+func (w ServiceDescriptorWrapper) Descriptor() protoreflect.ServiceDescriptor {
+	return w.sd
+}
+
 func (w ServiceDescriptorWrapper) JavaClassName() JavaClassName {
 	return w.javaClassName
 }

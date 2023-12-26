@@ -47,6 +47,10 @@ func WrapFileDescriptor(fd protoreflect.FileDescriptor, includeServices bool) Fi
 	}
 }
 
+func (w FileDescriptorWrapper) Descriptor() protoreflect.FileDescriptor {
+	return w.fd
+}
+
 func (w FileDescriptorWrapper) JavaPackage() JavaPackage {
 	return w.javaPackage
 }

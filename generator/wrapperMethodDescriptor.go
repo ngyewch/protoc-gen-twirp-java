@@ -46,6 +46,10 @@ func (w MethodDescriptorWrapper) Name() string {
 	return string(w.md.Name())
 }
 
+func (w MethodDescriptorWrapper) Descriptor() protoreflect.MethodDescriptor {
+	return w.md
+}
+
 func (w MethodDescriptorWrapper) JavaMethod() JavaMethod {
 	return w.javaMethod
 }
