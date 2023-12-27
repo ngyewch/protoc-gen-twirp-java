@@ -19,11 +19,24 @@ See [github.com/ngyewch/protoc-gen-twirp-java-example](https://github.com/ngyewc
 go install github.com/ngyewch/protoc-gen-twirp-java@latest
 ```
 
-## Running
+## Generating sources
+
+Generated sources will need to be added via source set configuration. For example:
+
+```
+sourceSets {
+    main {
+        java {
+            srcDir("build/generated/source/protoc-gen-twirp-java/main/java")
+        }
+    }
+}
+```
 
 ### Command-line
 
 ```
+OUTPUT_DIR=build/generated/source/protoc-gen-twirp-java/main/java
 mkdir -p ${OUTPUT_DIR}
 protoc --proto_path=${PB_DIR} \
     --twirp-java_out=${OUTPUT_DIR} \
@@ -37,6 +50,7 @@ protoc --proto_path=${PB_DIR} \
 ```
 docker build --tag go-protoc-twirp-java:latest https://github.com/ngyewch/protoc-gen-twirp-java.git
 
+OUTPUT_DIR=build/generated/source/protoc-gen-twirp-java/main/java
 mkdir -p ${OUTPUT_DIR}
 docker run --rm -it \
     --user $(id -u):$(id -g) \
@@ -56,3 +70,29 @@ docker run --rm -it \
 |----------------------|-----------|---------|--------------------------------------------------------------------------------------------------------|
 | `gen-helidon-client` | `boolean` | `false` | Generate [Helidon SE WebClient based](https://helidon.io/docs/v2/se/webclient/01_introduction) client. | 
 | `gen-helidon-server` | `boolean` | `false` | Generate [Helidon SE WebServer based](https://helidon.io/docs/v2/se/webserver/01_introduction) server. | 
+
+## Java dependencies
+
+```
+implementation("com.google.protobuf:protobuf-java:3.25.1")
+implementation("com.google.protobuf:protobuf-java-util:3.25.1")
+```
+
+### Helidon Client
+
+```
+implementation(platform("io.helidon:helidon-bom:2.6.4"))
+
+implementation("io.helidon.webclient:helidon-webclient")
+```
+
+### Helidon Server
+
+```
+implementation(platform("io.helidon:helidon-bom:2.6.4"))
+
+implementation("io.helidon.common:helidon-common-http")
+implementation("io.helidon.common:helidon-common-reactive")
+implementation("io.helidon.media:helidon-media-common")
+implementation("io.helidon.webserver:helidon-webserver")
+```
