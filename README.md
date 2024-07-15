@@ -74,14 +74,14 @@ docker run --rm -it \
 ## Java dependencies
 
 ```
-implementation("com.google.protobuf:protobuf-java:3.25.1")
-implementation("com.google.protobuf:protobuf-java-util:3.25.1")
+implementation("com.google.protobuf:protobuf-java:4.27.2")
+implementation("com.google.protobuf:protobuf-java-util:4.27.2")
 ```
 
 ### Helidon Client
 
 ```
-implementation(platform("io.helidon:helidon-bom:2.6.4"))
+implementation(platform("io.helidon:helidon-bom:2.6.7"))
 
 implementation("io.helidon.webclient:helidon-webclient")
 ```
@@ -89,7 +89,7 @@ implementation("io.helidon.webclient:helidon-webclient")
 ### Helidon Server
 
 ```
-implementation(platform("io.helidon:helidon-bom:2.6.4"))
+implementation(platform("io.helidon:helidon-bom:2.6.7"))
 
 implementation("io.helidon.common:helidon-common-http")
 implementation("io.helidon.common:helidon-common-reactive")
