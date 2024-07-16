@@ -74,8 +74,10 @@ docker run --rm -it \
 ## Java dependencies
 
 ```
-implementation("com.google.protobuf:protobuf-java:4.27.2")
-implementation("com.google.protobuf:protobuf-java-util:4.27.2")
+implementation(platform("com.google.protobuf:protobuf-bom:4.27.2"))
+
+implementation("com.google.protobuf:protobuf-java")
+implementation("com.google.protobuf:protobuf-java-util")
 ```
 
 ### Helidon Client
