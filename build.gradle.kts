@@ -3,7 +3,7 @@ plugins {
     signing
 }
 
-group = "com.github.ngyewch"
+group = "io.github.ngyewch"
 version = "0.1.1"
 
 configurations {
@@ -111,6 +111,14 @@ publishing {
         maven {
             name = "build"
             url = uri(layout.buildDirectory.dir("repo"))
+        }
+        maven {
+            name = "central"
+            url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            credentials {
+                username = project.properties["ossrh.username"] as String?
+                password = project.properties["ossrh.password"] as String?
+            }
         }
     }
 }
