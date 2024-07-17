@@ -1,5 +1,6 @@
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/ngyewch/protoc-gen-twirp-java/CI.yml)
 ![GitHub tag (with filter)](https://img.shields.io/github/v/tag/ngyewch/protoc-gen-twirp-java)
+![Maven Central Version](https://img.shields.io/maven-central/v/io.github.ngyewch/protoc-gen-twirp-java)
 
 # protoc-gen-twirp-java
 
@@ -13,55 +14,60 @@
 
 See [github.com/ngyewch/protoc-gen-twirp-java-example](https://github.com/ngyewch/protoc-gen-twirp-java-example)
 
-## Installation
+## Usage
 
+### `build.gradle.kts`
 ```
-go install github.com/ngyewch/protoc-gen-twirp-java@latest
-```
+import com.google.protobuf.gradle.id
 
-## Generating sources
+plugins {
+    id("com.google.protobuf") version "0.9.4"
+    // ...
+}
 
-Generated sources will need to be added via source set configuration. For example:
+dependencies {
+    // Protobuf
+    implementation(platform("com.google.protobuf:protobuf-bom:4.27.2"))
+    implementation("com.google.protobuf:protobuf-java")
+    implementation("com.google.protobuf:protobuf-java-util")
 
-```
-sourceSets {
-    main {
-        java {
-            srcDir("build/generated/source/protoc-gen-twirp-java/main/java")
+    // Helidon
+    implementation(platform("io.helidon:helidon-bom:2.6.7"))
+
+    // Helidon client
+    implementation("io.helidon.webclient:helidon-webclient")
+
+    // Helidon server
+    implementation("io.helidon.common:helidon-common-http")
+    implementation("io.helidon.common:helidon-common-reactive")
+    implementation("io.helidon.media:helidon-media-common")
+    implementation("io.helidon.webserver:helidon-webserver")
+
+    // ...
+}
+
+protobuf {
+    plugins {
+        id("twirp-java") {
+            artifact = "io.github.ngyewch:protoc-gen-twirp-java:0.1.1"
+        }
+    }
+    protoc {
+        artifact = "com.google.protobuf:protoc:4.27.2"
+    }
+    generateProtoTasks {
+        ofSourceSet("main").forEach {
+            it.plugins {
+                id("twirp-java") {
+                    option("gen-helidon-client=true")
+                    option("gen-helidon-server=true")
+                }
+            }
         }
     }
 }
-```
 
-### Command-line
-
-```
-OUTPUT_DIR=build/generated/source/protoc-gen-twirp-java/main/java
-mkdir -p ${OUTPUT_DIR}
-protoc --proto_path=${PB_DIR} \
-    --twirp-java_out=${OUTPUT_DIR} \
-    --twirp-java_opt=gen-helidon-client=true \
-    --twirp-java_opt=gen-helidon-server=true \
-    ${PB_FILE}
-```
-
-### Via Docker
-
-```
-docker build --tag go-protoc-twirp-java:latest https://github.com/ngyewch/protoc-gen-twirp-java.git
-
-OUTPUT_DIR=build/generated/source/protoc-gen-twirp-java/main/java
-mkdir -p ${OUTPUT_DIR}
-docker run --rm -it \
-    --user $(id -u):$(id -g) \
-    -v ${PB_DIR}:/protobuf \
-    -v ${OUTPUT_DIR}:/build \
-    go-protoc-twirp-java:latest \
-    protoc --proto_path=/protobuf \
-    --twirp-java_out=/build \
-    --twirp-java_opt=gen-helidon-client=true \
-    --twirp-java_opt=gen-helidon-server=true \
-    ${PB_FILE}
+// ...
 ```
 
 ## Options
@@ -70,31 +76,3 @@ docker run --rm -it \
 |----------------------|-----------|---------|--------------------------------------------------------------------------------------------------------|
 | `gen-helidon-client` | `boolean` | `false` | Generate [Helidon SE WebClient based](https://helidon.io/docs/v2/se/webclient/01_introduction) client. | 
 | `gen-helidon-server` | `boolean` | `false` | Generate [Helidon SE WebServer based](https://helidon.io/docs/v2/se/webserver/01_introduction) server. | 
-
-## Java dependencies
-
-```
-implementation(platform("com.google.protobuf:protobuf-bom:4.27.2"))
-
-implementation("com.google.protobuf:protobuf-java")
-implementation("com.google.protobuf:protobuf-java-util")
-```
-
-### Helidon Client
-
-```
-implementation(platform("io.helidon:helidon-bom:2.6.7"))
-
-implementation("io.helidon.webclient:helidon-webclient")
-```
-
-### Helidon Server
-
-```
-implementation(platform("io.helidon:helidon-bom:2.6.7"))
-
-implementation("io.helidon.common:helidon-common-http")
-implementation("io.helidon.common:helidon-common-reactive")
-implementation("io.helidon.media:helidon-media-common")
-implementation("io.helidon.webserver:helidon-webserver")
-```
