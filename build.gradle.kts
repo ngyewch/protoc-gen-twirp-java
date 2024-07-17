@@ -29,23 +29,29 @@ tasks {
 
     fun createTask(goos: String, goarch: String, classifier: String) {
         val taskName = "build_${goos}_${goarch}"
-        val outputFile =
+        val outputExeFile =
             layout.buildDirectory.file("protoc-gen-twirp-java-${project.version}-${classifier}.exe").get().asFile
+        val outputAscFile =
+            layout.buildDirectory.file("protoc-gen-twirp-java-${project.version}-${classifier}.exe.asc").get().asFile
 
-        binaryArtifacts.add(artifacts.add("binaries", outputFile) {
+        binaryArtifacts.add(artifacts.add("binaries", outputExeFile) {
             this.builtBy(taskName)
-            this.type = "binary"
             this.classifier = classifier
             this.extension = "exe"
+        })
+        binaryArtifacts.add(artifacts.add("binaries", outputAscFile) {
+            this.builtBy(taskName)
+            this.classifier = "${classifier}.exe"
+            this.extension = "asc"
         })
 
         register<Exec>(taskName) {
             dependsOn("createBuildDirectory")
-            outputs.file(outputFile)
-            commandLine("go", "build", "-o", outputFile)
+            outputs.file(outputExeFile)
+            outputs.file(outputAscFile)
+            commandLine("go", "build", "-o", outputExeFile)
             environment("GOOS", goos)
             environment("GOARCH", goarch)
-
         }
 
         named("buildBinaries") {
@@ -110,6 +116,6 @@ publishing {
 }
 
 signing {
+    useGpgCmd()
     sign(publishing.publications["maven"])
 }
-
