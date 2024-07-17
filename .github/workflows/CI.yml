@@ -25,14 +25,6 @@ jobs:
       - name: Build
         run: go build ./...
 
-      - name: Install
-        run: go install .
-
-      - name: Setup protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          version: 27.2
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -44,19 +36,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 11
-
-      - name: Generate Twirp sources
-        run: |
-          mkdir -p ${OUTPUT_DIR}
-          protoc --proto_path=${PB_DIR} \
-            --twirp-java_out=${OUTPUT_DIR} \
-            --twirp-java_opt=gen-helidon-client=true \
-            --twirp-java_opt=gen-helidon-server=true \
-            service.proto
-        working-directory: ./protoc-gen-twirp-java-example
-        env:
-          PB_DIR: src/main/proto
-          OUTPUT_DIR: build/generated/source/protoc-gen-twirp-java/main/java
 
       - name: Build Java project
         run: ./gradlew build
