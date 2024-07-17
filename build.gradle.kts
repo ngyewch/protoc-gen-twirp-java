@@ -1,75 +1,8 @@
 plugins {
     `maven-publish`
     signing
-}
-
-group = "io.github.ngyewch"
-version = "0.1.1"
-
-configurations {
-    create("binaries")
-}
-
-val binaryArtifacts: MutableList<PublishArtifact> = ArrayList()
-
-tasks {
-    register("buildBinaries")
-
-    val buildInputs = arrayOf(
-        arrayOf("linux", "arm64", "linux-aarch_64"),
-        arrayOf("linux", "ppc64le", "linux-ppcle_64"),
-        arrayOf("linux", "s390x", "linux-s390_64"),
-        arrayOf("linux", "386", "linux-x86_32"),
-        arrayOf("linux", "amd64", "linux-x86_64"),
-        arrayOf("darwin", "arm64", "osx-aarch_64"),
-        arrayOf("darwin", "amd64", "osx-x86_64"),
-        arrayOf("windows", "386", "windows-x86_32"),
-        arrayOf("windows", "amd64", "windows-x86_64"),
-    )
-
-    fun createTask(goos: String, goarch: String, classifier: String) {
-        val taskName = "build_${goos}_${goarch}"
-        val outputExeFile =
-            layout.buildDirectory.file("protoc-gen-twirp-java-${project.version}-${classifier}.exe").get().asFile
-        val outputAscFile =
-            layout.buildDirectory.file("protoc-gen-twirp-java-${project.version}-${classifier}.exe.asc").get().asFile
-
-        binaryArtifacts.add(artifacts.add("binaries", outputExeFile) {
-            this.builtBy(taskName)
-            this.classifier = classifier
-            this.extension = "exe"
-        })
-        binaryArtifacts.add(artifacts.add("binaries", outputAscFile) {
-            this.builtBy(taskName)
-            this.classifier = "${classifier}.exe"
-            this.extension = "asc"
-        })
-
-        register<Exec>(taskName) {
-            dependsOn("createBuildDirectory")
-            outputs.file(outputExeFile)
-            outputs.file(outputAscFile)
-            commandLine("go", "build", "-o", outputExeFile)
-            environment("GOOS", goos)
-            environment("GOARCH", goarch)
-        }
-
-        named("buildBinaries") {
-            dependsOn(taskName)
-        }
-    }
-
-    for (buildInput in buildInputs) {
-        createTask(buildInput[0], buildInput[1], buildInput[2])
-    }
-
-    register<Exec>("createBuildDirectory") {
-        commandLine("mkdir", "-p", layout.buildDirectory.get().asFile.path)
-    }
-
-    withType<PublishToMavenRepository>().configureEach {
-        dependsOn("buildBinaries")
-    }
+    id("com.gradleup.nmcp") version "0.0.8"
+    id("io.github.ngyewch.protoc.plugin")
 }
 
 publishing {
@@ -79,9 +12,7 @@ publishing {
             artifactId = project.name
             version = project.version as String
 
-            for (binaryArtifact in binaryArtifacts) {
-                artifact(binaryArtifact)
-            }
+            from(components["protocPlugin"])
 
             pom {
                 name = project.name
@@ -112,18 +43,18 @@ publishing {
             name = "build"
             url = uri(layout.buildDirectory.dir("repo"))
         }
-        maven {
-            name = "central"
-            url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            credentials {
-                username = project.properties["ossrh.username"] as String?
-                password = project.properties["ossrh.password"] as String?
-            }
-        }
     }
 }
 
 signing {
     useGpgCmd()
     sign(publishing.publications["maven"])
+}
+
+nmcp {
+    publishAllPublications {
+        username = project.properties["mavenCentralUsername"] as String?
+        password = project.properties["mavenCentralPassword"] as String?
+        publicationType = "AUTOMATIC"
+    }
 }
