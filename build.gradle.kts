@@ -1,8 +1,30 @@
 plugins {
+    `java-library`
     `maven-publish`
     signing
-    id("com.gradleup.nmcp") version "0.0.8"
+    id("com.gradleup.nmcp") version "0.0.9"
     id("io.github.ngyewch.protoc.plugin")
+    id("com.autonomousapps.dependency-analysis") version "1.32.0"
+    id("com.diffplug.spotless") version "6.25.0"
+    id("com.github.ben-manes.versions") version "0.51.0"
+    id("se.ascp.gradle.gradle-versions-filter") version "0.1.16"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    api(platform("com.google.protobuf:protobuf-bom:4.27.2"))
+    api(platform("io.helidon:helidon-bom:2.6.7"))
+
+    api("com.google.protobuf:protobuf-java")
+    implementation("com.google.protobuf:protobuf-java-util")
+    api("io.helidon.common:helidon-common-http")
+    implementation("io.helidon.common:helidon-common-reactive")
+    implementation("io.helidon.media:helidon-media-common")
+    implementation("io.helidon.webclient:helidon-webclient")
+    api("io.helidon.webserver:helidon-webserver")
 }
 
 publishing {
