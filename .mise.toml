@@ -1,7 +1,6 @@
 [tools]
 task = "3.38.0"
 go = "1.22.5"
-protoc = "27.2"
 act = "0.2.64"
-java = "temurin-11.0.24+8"
 "go:github.com/psampaz/go-mod-outdated" = "0.9.0"
+
