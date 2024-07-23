@@ -3,9 +3,14 @@ package io.github.ngyewch.twirp.helidon.client;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
+import io.github.ngyewch.twirp.TwirpError;
+import io.github.ngyewch.twirp.TwirpException;
 import io.github.ngyewch.twirp.helidon.MediaTypes;
 import io.helidon.common.http.MediaType;
 import io.helidon.webclient.WebClient;
+import io.helidon.webclient.WebClientException;
+import io.helidon.webclient.WebClientResponse;
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 public abstract class AbstractService {
@@ -48,7 +53,11 @@ public abstract class AbstractService {
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     } catch (ExecutionException e) {
-      throw new RuntimeException(e.getCause());
+      if (e.getCause() != null) {
+        handleException(e.getCause());
+      } else {
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -73,7 +82,32 @@ public abstract class AbstractService {
     } catch (InterruptedException | InvalidProtocolBufferException e) {
       throw new RuntimeException(e);
     } catch (ExecutionException e) {
-      throw new RuntimeException(e.getCause());
+      if (e.getCause() != null) {
+        handleException(e.getCause());
+      } else {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  private static void handleException(Throwable t) {
+    if (t instanceof WebClientException) {
+      final WebClientException wce = (WebClientException) t;
+      if (wce.response().isPresent()) {
+        final WebClientResponse wcr = wce.response().get();
+        try {
+          final String json = wcr.content().as(String.class).get();
+          final TwirpError twirpError = TwirpError.fromJson(json);
+          throw new TwirpException(twirpError);
+        } catch (InterruptedException | ExecutionException | IOException e2) {
+          // ignore
+        }
+      }
+      throw wce;
+    } else if (t instanceof RuntimeException) {
+      throw (RuntimeException) t;
+    } else {
+      throw new RuntimeException(t);
     }
   }
 }

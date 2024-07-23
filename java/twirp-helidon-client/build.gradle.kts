@@ -17,12 +17,14 @@ repositories {
 dependencies {
     api(platform(project(":twirp-bom")))
 
+    implementation(project(":twirp-common"))
     implementation(project(":twirp-helidon-common"))
 
     api("com.google.protobuf:protobuf-java")
     implementation("com.google.protobuf:protobuf-java-util")
     api("io.helidon.common:helidon-common-http")
     implementation("io.helidon.common:helidon-common-reactive")
+    implementation("io.helidon.media:helidon-media-common")
     implementation("io.helidon.webclient:helidon-webclient")
 }
 

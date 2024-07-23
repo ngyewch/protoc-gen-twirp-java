@@ -17,6 +17,7 @@ repositories {
 dependencies {
     api(platform(project(":twirp-bom")))
 
+    api(project(":twirp-common"))
     implementation(project(":twirp-helidon-common"))
 
     api("com.google.protobuf:protobuf-java")
@@ -25,6 +26,7 @@ dependencies {
     implementation("io.helidon.common:helidon-common-reactive")
     implementation("io.helidon.media:helidon-media-common")
     api("io.helidon.webserver:helidon-webserver")
+    implementation("org.apache.commons:commons-lang3:3.15.0")
 }
 
 publishing {
