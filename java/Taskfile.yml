@@ -1,0 +1,36 @@
+version: 3
+
+tasks:
+  clean:
+    desc: Clean
+    cmds:
+      - ./gradlew clean
+
+  build:
+    desc: Build
+    cmds:
+      - ./gradlew build
+
+  publishLocally:
+    desc: Publish locally
+    cmds:
+      - ./gradlew publishAllPublicationsToBuildRepository
+
+  dependencyUpdates:
+    desc: Dependency updates
+    cmds:
+      - ./gradlew dependencyUpdates | grep '\[' | grep -v '\[\[' | sort | uniq
+
+  spotlessCheck:
+    desc: Spotless check
+    cmds:
+      - ./gradlew spotlessCheck
+
+  spotlessApply:
+    desc: Spotless apply
+    cmds:
+      - ./gradlew spotlessApply
+
+  buildHealth:
+    cmds:
+      - ./gradlew buildHealth && cat build/reports/dependency-analysis/build-health-report.txt
