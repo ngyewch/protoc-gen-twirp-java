@@ -1,7 +1,6 @@
 package io.github.ngyewch.twirp;
 
 import java.util.Map;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 
 public class TwirpException extends RuntimeException {
   private final TwirpError error;

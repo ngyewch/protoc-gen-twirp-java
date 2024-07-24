@@ -40,10 +40,10 @@ public class Handler {
                   sendError(res, TwirpErrorCode.MALFORMED, "Malformed content", null);
                 } catch (Exception e) {
                   sendError(
-                          res,
-                          TwirpErrorCode.INTERNAL,
-                          e.toString(),
-                          Collections.singletonMap("stackTrace", ExceptionUtils.getStackTrace(e)));
+                      res,
+                      TwirpErrorCode.INTERNAL,
+                      e.toString(),
+                      Collections.singletonMap("stackTrace", ExceptionUtils.getStackTrace(e)));
                 }
               });
     } else if (contentType.equals(MediaTypes.JSON_MEDIA_TYPE)) {
