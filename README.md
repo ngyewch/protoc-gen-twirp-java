@@ -26,21 +26,22 @@ plugins {
 }
 
 dependencies {
+    implementation(platform("io.github.ngyewch.twirp:twirp-bom:0.2.0"))
+
     // Protobuf
-    implementation(platform("com.google.protobuf:protobuf-bom:4.27.2"))
     implementation("com.google.protobuf:protobuf-java")
-    implementation("com.google.protobuf:protobuf-java-util")
 
     // Helidon
-    implementation(platform("io.helidon:helidon-bom:2.6.7"))
+    implementation("io.github.ngyewch.twirp:twirp-helidon-common")
 
     // Helidon client
+    implementation("io.github.ngyewch.twirp:twirp-helidon-client")
     implementation("io.helidon.webclient:helidon-webclient")
 
     // Helidon server
+    implementation("io.github.ngyewch.twirp:twirp-helidon-server")
     implementation("io.helidon.common:helidon-common-http")
     implementation("io.helidon.common:helidon-common-reactive")
-    implementation("io.helidon.media:helidon-media-common")
     implementation("io.helidon.webserver:helidon-webserver")
 
     // ...
@@ -49,7 +50,7 @@ dependencies {
 protobuf {
     plugins {
         id("twirp-java") {
-            artifact = "io.github.ngyewch:protoc-gen-twirp-java:0.1.1"
+            artifact = "io.github.ngyewch.twirp:protoc-gen-twirp-java:0.2.0"
         }
     }
     protoc {
