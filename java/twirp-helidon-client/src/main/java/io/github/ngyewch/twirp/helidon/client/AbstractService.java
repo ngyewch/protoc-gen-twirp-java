@@ -29,14 +29,16 @@ public abstract class AbstractService {
   }
 
   protected void doRequest(String path, Message input, Message.Builder outputBuilder) {
+    final Single<Message.Builder> requester;
+    if (contentType.equals(MediaTypes.PROTOBUF_MEDIA_TYPE)) {
+      requester = doProtobufRequest(path, input, outputBuilder);
+    } else if (contentType.equals(MediaTypes.JSON_MEDIA_TYPE)) {
+      requester = doJsonRequest(path, input, outputBuilder);
+    } else {
+      throw new IllegalArgumentException("unsupported content type");
+    }
     try {
-      if (contentType.equals(MediaTypes.PROTOBUF_MEDIA_TYPE)) {
-        doProtobufRequest(path, input, outputBuilder).get();
-      } else if (contentType.equals(MediaTypes.JSON_MEDIA_TYPE)) {
-        doJsonRequest(path, input, outputBuilder).get();
-      } else {
-        throw new IllegalArgumentException("unsupported content type");
-      }
+      requester.get();
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     } catch (ExecutionException e) {
@@ -49,6 +51,45 @@ public abstract class AbstractService {
       } else {
         throw new RuntimeException(e);
       }
+    }
+  }
+
+  private Single<Message.Builder> doProtobufRequest(
+      String path, Message input, Message.Builder outputBuilder) {
+    return webClient
+        .post()
+        .path(path)
+        .contentType(MediaTypes.PROTOBUF_MEDIA_TYPE)
+        .submit(input.toByteArray())
+        .flatMap(this::handleNonSuccessfulResponse)
+        .first()
+        .flatMap(
+            webClientResponse -> expectMediaType(webClientResponse, MediaTypes.PROTOBUF_MEDIA_TYPE))
+        .first()
+        .flatMap(webClientResponse -> webClientResponse.content().as(byte[].class))
+        .first()
+        .map(bytes -> mergeProtobuf(outputBuilder, bytes));
+  }
+
+  private Single<Message.Builder> doJsonRequest(
+      String path, Message input, Message.Builder outputBuilder) {
+    try {
+      final String requestJson = JsonFormat.printer().print(input);
+      return webClient
+          .post()
+          .path(path)
+          .contentType(MediaTypes.JSON_MEDIA_TYPE)
+          .submit(requestJson)
+          .flatMap(this::handleNonSuccessfulResponse)
+          .first()
+          .flatMap(
+              webClientResponse -> expectMediaType(webClientResponse, MediaTypes.JSON_MEDIA_TYPE))
+          .first()
+          .flatMap(webClientResponse -> webClientResponse.content().as(String.class))
+          .first()
+          .map(responseJson -> mergeProtobufJson(outputBuilder, responseJson));
+    } catch (InvalidProtocolBufferException e) {
+      throw new TwirpException(TwirpErrorCode.INTERNAL, e);
     }
   }
 
@@ -107,45 +148,6 @@ public abstract class AbstractService {
       return messageBuilder.mergeFrom(data);
     } catch (InvalidProtocolBufferException e) {
       throw new TwirpException(TwirpErrorCode.MALFORMED, e, true);
-    }
-  }
-
-  private Single<Message.Builder> doProtobufRequest(
-      String path, Message input, Message.Builder outputBuilder) {
-    return webClient
-        .post()
-        .path(path)
-        .contentType(MediaTypes.PROTOBUF_MEDIA_TYPE)
-        .submit(input.toByteArray())
-        .flatMap(this::handleNonSuccessfulResponse)
-        .first()
-        .flatMap(
-            webClientResponse -> expectMediaType(webClientResponse, MediaTypes.PROTOBUF_MEDIA_TYPE))
-        .first()
-        .flatMap(webClientResponse -> webClientResponse.content().as(byte[].class))
-        .first()
-        .map(bytes -> mergeProtobuf(outputBuilder, bytes));
-  }
-
-  private Single<Message.Builder> doJsonRequest(
-      String path, Message input, Message.Builder outputBuilder) {
-    try {
-      final String requestJson = JsonFormat.printer().print(input);
-      return webClient
-          .post()
-          .path(path)
-          .contentType(MediaTypes.JSON_MEDIA_TYPE)
-          .submit(requestJson)
-          .flatMap(this::handleNonSuccessfulResponse)
-          .first()
-          .flatMap(
-              webClientResponse -> expectMediaType(webClientResponse, MediaTypes.JSON_MEDIA_TYPE))
-          .first()
-          .flatMap(webClientResponse -> webClientResponse.content().as(String.class))
-          .first()
-          .map(responseJson -> mergeProtobufJson(outputBuilder, responseJson));
-    } catch (InvalidProtocolBufferException e) {
-      throw new TwirpException(TwirpErrorCode.INTERNAL, e);
     }
   }
 }
