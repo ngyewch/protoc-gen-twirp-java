@@ -1,6 +1,6 @@
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/ngyewch/protoc-gen-twirp-java/CI.yml)
 ![GitHub tag (with filter)](https://img.shields.io/github/v/tag/ngyewch/protoc-gen-twirp-java)
-![Maven Central Version](https://img.shields.io/maven-central/v/io.github.ngyewch/protoc-gen-twirp-java)
+![Maven Central Version](https://img.shields.io/maven-central/v/io.github.ngyewch.twirp/protoc-gen-twirp-java)
 
 # protoc-gen-twirp-java
 
