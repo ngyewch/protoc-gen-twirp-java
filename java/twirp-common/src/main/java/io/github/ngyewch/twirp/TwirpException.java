@@ -1,6 +1,7 @@
 package io.github.ngyewch.twirp;
 
 import java.util.Map;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 public class TwirpException extends RuntimeException {
   private final TwirpError error;
@@ -17,6 +18,14 @@ public class TwirpException extends RuntimeException {
 
   public TwirpException(TwirpErrorCode errorCode, String msg, Map<String, String> meta) {
     this(TwirpError.from(errorCode, msg, meta));
+  }
+
+  public TwirpException(TwirpErrorCode errorCode, Throwable t) {
+    this(errorCode, t, false);
+  }
+
+  public TwirpException(TwirpErrorCode errorCode, Throwable t, boolean withStackTrace) {
+    this(TwirpError.from(errorCode, t, withStackTrace));
   }
 
   public TwirpError getError() {

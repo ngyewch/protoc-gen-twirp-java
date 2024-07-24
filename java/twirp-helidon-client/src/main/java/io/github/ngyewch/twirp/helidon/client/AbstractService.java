@@ -3,10 +3,14 @@ package io.github.ngyewch.twirp.helidon.client;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
+import io.github.ngyewch.twirp.Meta;
 import io.github.ngyewch.twirp.TwirpError;
+import io.github.ngyewch.twirp.TwirpErrorCode;
 import io.github.ngyewch.twirp.TwirpException;
 import io.github.ngyewch.twirp.helidon.MediaTypes;
+import io.helidon.common.http.Http;
 import io.helidon.common.http.MediaType;
+import io.helidon.common.reactive.Single;
 import io.helidon.webclient.WebClient;
 import io.helidon.webclient.WebClientException;
 import io.helidon.webclient.WebClientResponse;
@@ -25,89 +29,123 @@ public abstract class AbstractService {
   }
 
   protected void doRequest(String path, Message input, Message.Builder outputBuilder) {
-    if (contentType.equals(MediaTypes.PROTOBUF_MEDIA_TYPE)) {
-      doProtobufRequest(path, input, outputBuilder);
-    } else if (contentType.equals(MediaTypes.JSON_MEDIA_TYPE)) {
-      doJsonRequest(path, input, outputBuilder);
-    } else {
-      throw new IllegalArgumentException("unsupported content type");
-    }
-  }
-
-  private void doProtobufRequest(String path, Message input, Message.Builder outputBuilder) {
     try {
-      webClient
-          .post()
-          .path(path)
-          .contentType(MediaTypes.PROTOBUF_MEDIA_TYPE)
-          .submit(input.toByteArray(), byte[].class)
-          .map(
-              responseBytes -> {
-                try {
-                  return outputBuilder.mergeFrom(responseBytes);
-                } catch (InvalidProtocolBufferException e) {
-                  throw new RuntimeException(e);
-                }
-              })
-          .get();
+      if (contentType.equals(MediaTypes.PROTOBUF_MEDIA_TYPE)) {
+        doProtobufRequest(path, input, outputBuilder).get();
+      } else if (contentType.equals(MediaTypes.JSON_MEDIA_TYPE)) {
+        doJsonRequest(path, input, outputBuilder).get();
+      } else {
+        throw new IllegalArgumentException("unsupported content type");
+      }
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     } catch (ExecutionException e) {
       if (e.getCause() != null) {
-        handleException(e.getCause());
+        if (e.getCause() instanceof RuntimeException) {
+          throw (RuntimeException) e.getCause();
+        } else {
+          throw new RuntimeException(e.getCause());
+        }
       } else {
         throw new RuntimeException(e);
       }
     }
   }
 
-  private void doJsonRequest(String path, Message input, Message.Builder outputBuilder) {
+  private Single<WebClientResponse> handleNonSuccessfulResponse(
+      WebClientResponse webClientResponse) {
+    if (webClientResponse.status().code() < Http.Status.MOVED_PERMANENTLY_301.code()) {
+      return Single.just(webClientResponse);
+    }
+    final MediaType mediaType = webClientResponse.headers().contentType().orElse(null);
+    if ((mediaType != null) && mediaType.equals(MediaTypes.JSON_MEDIA_TYPE)) { // Twirp error
+      return webClientResponse
+          .content()
+          .as(String.class)
+          .map(
+              s -> {
+                try {
+                  throw new TwirpException(TwirpError.fromJson(s));
+                } catch (IOException e) {
+                  throw new WebClientException(
+                      "Request failed with code " + webClientResponse.status().code());
+                }
+              });
+    } else {
+      return Single.error(
+          new WebClientException("Request failed with code " + webClientResponse.status().code()));
+    }
+  }
+
+  private Single<WebClientResponse> expectMediaType(
+      WebClientResponse webClientResponse, MediaType expectedMediaType) {
+    final MediaType mediaType = webClientResponse.headers().contentType().orElse(null);
+    if ((mediaType == null) || !mediaType.equals(expectedMediaType)) {
+      return Single.error(
+          new TwirpException(
+              TwirpErrorCode.INVALID_ARGUMENT,
+              "unexpected content type",
+              (mediaType != null)
+                  ? new Meta().set("Content-Type", mediaType.toString()).get()
+                  : null));
+    } else {
+      return Single.just(webClientResponse);
+    }
+  }
+
+  private Message.Builder mergeProtobufJson(Message.Builder messageBuilder, String json) {
+    try {
+      JsonFormat.parser().merge(json, messageBuilder);
+      return messageBuilder;
+    } catch (InvalidProtocolBufferException e) {
+      throw new TwirpException(TwirpErrorCode.MALFORMED, e, true);
+    }
+  }
+
+  private Message.Builder mergeProtobuf(Message.Builder messageBuilder, byte[] data) {
+    try {
+      return messageBuilder.mergeFrom(data);
+    } catch (InvalidProtocolBufferException e) {
+      throw new TwirpException(TwirpErrorCode.MALFORMED, e, true);
+    }
+  }
+
+  private Single<Message.Builder> doProtobufRequest(
+      String path, Message input, Message.Builder outputBuilder) {
+    return webClient
+        .post()
+        .path(path)
+        .contentType(MediaTypes.PROTOBUF_MEDIA_TYPE)
+        .submit(input.toByteArray())
+        .flatMap(this::handleNonSuccessfulResponse)
+        .first()
+        .flatMap(
+            webClientResponse -> expectMediaType(webClientResponse, MediaTypes.PROTOBUF_MEDIA_TYPE))
+        .first()
+        .flatMap(webClientResponse -> webClientResponse.content().as(byte[].class))
+        .first()
+        .map(bytes -> mergeProtobuf(outputBuilder, bytes));
+  }
+
+  private Single<Message.Builder> doJsonRequest(
+      String path, Message input, Message.Builder outputBuilder) {
     try {
       final String requestJson = JsonFormat.printer().print(input);
-      webClient
+      return webClient
           .post()
           .path(path)
           .contentType(MediaTypes.JSON_MEDIA_TYPE)
-          .submit(requestJson, String.class)
-          .map(
-              responseJson -> {
-                try {
-                  JsonFormat.parser().merge(responseJson, outputBuilder);
-                  return outputBuilder;
-                } catch (InvalidProtocolBufferException e) {
-                  throw new RuntimeException(e);
-                }
-              })
-          .get();
-    } catch (InterruptedException | InvalidProtocolBufferException e) {
-      throw new RuntimeException(e);
-    } catch (ExecutionException e) {
-      if (e.getCause() != null) {
-        handleException(e.getCause());
-      } else {
-        throw new RuntimeException(e);
-      }
-    }
-  }
-
-  private static void handleException(Throwable t) {
-    if (t instanceof WebClientException) {
-      final WebClientException wce = (WebClientException) t;
-      if (wce.response().isPresent()) {
-        final WebClientResponse wcr = wce.response().get();
-        try {
-          final String json = wcr.content().as(String.class).get();
-          final TwirpError twirpError = TwirpError.fromJson(json);
-          throw new TwirpException(twirpError);
-        } catch (InterruptedException | ExecutionException | IOException e2) {
-          // ignore
-        }
-      }
-      throw wce;
-    } else if (t instanceof RuntimeException) {
-      throw (RuntimeException) t;
-    } else {
-      throw new RuntimeException(t);
+          .submit(requestJson)
+          .flatMap(this::handleNonSuccessfulResponse)
+          .first()
+          .flatMap(
+              webClientResponse -> expectMediaType(webClientResponse, MediaTypes.JSON_MEDIA_TYPE))
+          .first()
+          .flatMap(webClientResponse -> webClientResponse.content().as(String.class))
+          .first()
+          .map(responseJson -> mergeProtobufJson(outputBuilder, responseJson));
+    } catch (InvalidProtocolBufferException e) {
+      throw new TwirpException(TwirpErrorCode.INTERNAL, e);
     }
   }
 }

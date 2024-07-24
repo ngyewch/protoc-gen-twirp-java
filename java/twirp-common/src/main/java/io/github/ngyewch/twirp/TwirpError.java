@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Map;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 public class TwirpError {
   private String code;
@@ -45,6 +46,19 @@ public class TwirpError {
 
   public static TwirpError from(TwirpErrorCode errorCode, String msg, Map<String, String> meta) {
     return from(errorCode.getCode(), msg, meta);
+  }
+
+  public static TwirpError from(TwirpErrorCode errorCode, Throwable t) {
+    return from(errorCode, t, false);
+  }
+
+  public static TwirpError from(TwirpErrorCode errorCode, Throwable t, boolean withStackTrace) {
+    return from(
+        errorCode,
+        t.toString(),
+        withStackTrace
+            ? new Meta().set("stackTrace", ExceptionUtils.getStackTrace(t)).get()
+            : null);
   }
 
   public static TwirpError fromJson(String s) throws IOException {

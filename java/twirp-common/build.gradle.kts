@@ -6,6 +6,9 @@ plugins {
 }
 
 java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
     withJavadocJar()
     withSourcesJar()
 }
@@ -19,6 +22,7 @@ dependencies {
 
     implementation("com.fasterxml.jackson.core:jackson-annotations")
     implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("org.apache.commons:commons-lang3:3.15.0")
 }
 
 publishing {
@@ -63,7 +67,7 @@ signing {
 
 spotless {
     java {
-        googleJavaFormat("1.18.1").reflowLongStrings().skipJavadocFormatting()
+        googleJavaFormat("1.22.0").reflowLongStrings().skipJavadocFormatting()
         formatAnnotations()
         targetExclude("build/**")
     }
