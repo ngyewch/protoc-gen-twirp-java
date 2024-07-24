@@ -64,12 +64,6 @@ public class ProtocPlugin implements Plugin<Project> {
               String.format(
                   "%s-%s-%s.exe",
                   project.getName(), project.getVersion(), buildParameters.getClassifier()));
-      final File outputAscFile =
-          new File(
-              exeOutputDirectory,
-              String.format(
-                  "%s-%s-%s.exe.asc",
-                  project.getName(), project.getVersion(), buildParameters.getClassifier()));
       project
           .getArtifacts()
           .add(
@@ -79,16 +73,6 @@ public class ProtocPlugin implements Plugin<Project> {
                 artifact.builtBy(taskName);
                 artifact.setClassifier(buildParameters.getClassifier());
                 artifact.setExtension("exe");
-              });
-      project
-          .getArtifacts()
-          .add(
-              "binaries",
-              outputExeFile,
-              artifact -> {
-                artifact.builtBy(taskName);
-                artifact.setClassifier(buildParameters.getClassifier() + ".exe");
-                artifact.setExtension("asc");
               });
 
       final TaskProvider<Exec> buildBinaryTaskProvider =
@@ -101,7 +85,6 @@ public class ProtocPlugin implements Plugin<Project> {
                     task.doFirst(
                         t -> {
                           outputExeFile.getParentFile().mkdirs();
-                          outputAscFile.getParentFile().mkdirs();
                         });
                     task.getOutputs().file(outputExeFile);
                     task.commandLine("go", "build", "-o", outputExeFile, "../..");
