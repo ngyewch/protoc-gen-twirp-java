@@ -28,14 +28,6 @@ subprojects {
     }
 }
 
-nmcp {
-    publishAggregation {
-        username = project.properties["mavenCentralUsername"] as String?
-        password = project.properties["mavenCentralPassword"] as String?
-        publicationType = "AUTOMATIC"
-    }
-}
-
 versionsFilter {
     gradleReleaseChannel.set("current")
     checkConstraints.set(true)

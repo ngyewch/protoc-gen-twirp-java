@@ -1,12 +1,8 @@
 plugins {
     `maven-publish`
     signing
-    id("com.gradleup.nmcp") version "0.0.9"
+    id("com.gradleup.nmcp")
     id("io.github.ngyewch.protoc.plugin")
-    //id("com.autonomousapps.dependency-analysis") version "1.32.0"
-    //id("com.diffplug.spotless") version "6.25.0"
-    //id("com.github.ben-manes.versions") version "0.51.0"
-    //id("se.ascp.gradle.gradle-versions-filter") version "0.1.16"
 }
 
 publishing {
@@ -57,12 +53,10 @@ signing {
     sign(publishing.publications["maven"])
 }
 
-/*
 nmcp {
-    publishAllPublications {
+    publish("maven") {
         username = project.properties["mavenCentralUsername"] as String?
         password = project.properties["mavenCentralPassword"] as String?
         publicationType = "AUTOMATIC"
     }
 }
-*/

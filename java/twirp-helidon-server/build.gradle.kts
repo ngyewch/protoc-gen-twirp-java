@@ -3,6 +3,7 @@ plugins {
     `maven-publish`
     signing
     id("com.diffplug.spotless")
+    id("com.gradleup.nmcp")
 }
 
 java {
@@ -77,5 +78,13 @@ spotless {
         googleJavaFormat("1.22.0").reflowLongStrings().skipJavadocFormatting()
         formatAnnotations()
         targetExclude("build/**")
+    }
+}
+
+nmcp {
+    publish("maven") {
+        username = project.properties["mavenCentralUsername"] as String?
+        password = project.properties["mavenCentralPassword"] as String?
+        publicationType = "AUTOMATIC"
     }
 }

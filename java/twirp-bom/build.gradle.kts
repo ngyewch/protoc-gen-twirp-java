@@ -2,6 +2,7 @@ plugins {
     `java-platform`
     `maven-publish`
     signing
+    id("com.gradleup.nmcp")
 }
 
 javaPlatform {
@@ -58,4 +59,12 @@ publishing {
 signing {
     useGpgCmd()
     sign(publishing.publications["maven"])
+}
+
+nmcp {
+    publish("maven") {
+        username = project.properties["mavenCentralUsername"] as String?
+        password = project.properties["mavenCentralPassword"] as String?
+        publicationType = "AUTOMATIC"
+    }
 }
