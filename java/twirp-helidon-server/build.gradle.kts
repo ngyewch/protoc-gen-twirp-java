@@ -6,6 +6,9 @@ plugins {
 }
 
 java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
     withJavadocJar()
     withSourcesJar()
 }
@@ -71,7 +74,7 @@ signing {
 
 spotless {
     java {
-        googleJavaFormat("1.18.1").reflowLongStrings().skipJavadocFormatting()
+        googleJavaFormat("1.22.0").reflowLongStrings().skipJavadocFormatting()
         formatAnnotations()
         targetExclude("build/**")
     }
