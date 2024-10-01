@@ -68,7 +68,7 @@ signing {
 
 spotless {
     java {
-        googleJavaFormat("1.22.0").reflowLongStrings().skipJavadocFormatting()
+        googleJavaFormat("1.23.0").reflowLongStrings().skipJavadocFormatting()
         formatAnnotations()
         targetExclude("build/**")
     }

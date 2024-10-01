@@ -1,6 +1,6 @@
 plugins {
     `maven-publish`
-    id("com.autonomousapps.dependency-analysis") version "1.32.0"
+    id("com.autonomousapps.dependency-analysis") version "2.1.1"
     id("com.diffplug.spotless") version "6.25.0"
     id("com.github.ben-manes.versions") version "0.51.0"
     id("com.gradleup.nmcp") version "0.0.9"

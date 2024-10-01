@@ -30,7 +30,7 @@ dependencies {
     implementation("io.helidon.common:helidon-common-reactive")
     implementation("io.helidon.media:helidon-media-common")
     api("io.helidon.webserver:helidon-webserver")
-    implementation("org.apache.commons:commons-lang3:3.15.0")
+    implementation("org.apache.commons:commons-lang3:3.17.0")
 }
 
 publishing {
@@ -75,7 +75,7 @@ signing {
 
 spotless {
     java {
-        googleJavaFormat("1.22.0").reflowLongStrings().skipJavadocFormatting()
+        googleJavaFormat("1.23.0").reflowLongStrings().skipJavadocFormatting()
         formatAnnotations()
         targetExclude("build/**")
     }

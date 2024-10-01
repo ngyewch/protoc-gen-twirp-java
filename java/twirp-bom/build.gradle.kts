@@ -10,8 +10,8 @@ javaPlatform {
 }
 
 dependencies {
-    api(platform("com.google.protobuf:protobuf-bom:4.27.2"))
-    api(platform("io.helidon:helidon-bom:2.6.7"))
+    api(platform("com.google.protobuf:protobuf-bom:4.28.2"))
+    api(platform("io.helidon:helidon-bom:2.6.9"))
 
     constraints {
         api(project(":twirp-common"))
