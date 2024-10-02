@@ -21,6 +21,7 @@ Wait for `io.github.ngyewch.twirp:twirp-common` to be `PUBLISHED` at Maven Centr
 
 ```
 ./gradlew :twirp-helidon-common:publishAllPublicationsToCentralPortal
+./gradlew :twirp-apache-client:publishAllPublicationsToCentralPortal
 ```
 
 Wait for `io.github.ngyewch.twirp:twirp-helidon-common` to be `PUBLISHED` at Maven Central Portal.
