@@ -26,17 +26,22 @@ plugins {
 }
 
 dependencies {
-    implementation(platform("io.github.ngyewch.twirp:twirp-bom:0.2.0"))
+    implementation(platform("io.github.ngyewch.twirp:twirp-bom:0.3.0"))
 
     // Protobuf
     implementation("com.google.protobuf:protobuf-java")
+
+    // Common
+    implementation("io.github.ngyewch.twirp:twirp-common")
+    
+    // Apache HttpComponents
+    implementation("io.github.ngyewch.twirp:twirp-apache-client")
 
     // Helidon
     implementation("io.github.ngyewch.twirp:twirp-helidon-common")
 
     // Helidon client
     implementation("io.github.ngyewch.twirp:twirp-helidon-client")
-    implementation("io.helidon.webclient:helidon-webclient")
 
     // Helidon server
     implementation("io.github.ngyewch.twirp:twirp-helidon-server")
@@ -50,11 +55,11 @@ dependencies {
 protobuf {
     plugins {
         id("twirp-java") {
-            artifact = "io.github.ngyewch.twirp:protoc-gen-twirp-java:0.2.0"
+            artifact = "io.github.ngyewch.twirp:protoc-gen-twirp-java:0.3.0"
         }
     }
     protoc {
-        artifact = "com.google.protobuf:protoc:4.27.2"
+        artifact = "com.google.protobuf:protoc:4.28.2"
     }
     generateProtoTasks {
         ofSourceSet("main").forEach {
@@ -62,6 +67,7 @@ protobuf {
                 id("twirp-java") {
                     option("gen-helidon-client=true")
                     option("gen-helidon-server=true")
+                    option("gen-apache-client=true")
                 }
             }
         }
@@ -73,7 +79,8 @@ protobuf {
 
 ## Options
 
-| Name                 | Type      | Default | Description                                                                                            |
-|----------------------|-----------|---------|--------------------------------------------------------------------------------------------------------|
-| `gen-helidon-client` | `boolean` | `false` | Generate [Helidon SE WebClient based](https://helidon.io/docs/v2/se/webclient/01_introduction) client. | 
-| `gen-helidon-server` | `boolean` | `false` | Generate [Helidon SE WebServer based](https://helidon.io/docs/v2/se/webserver/01_introduction) server. | 
+| Name                 | Type      | Default | Description                                                                                                  |
+|----------------------|-----------|---------|--------------------------------------------------------------------------------------------------------------|
+| `gen-helidon-client` | `boolean` | `false` | Generate [Helidon SE WebClient](https://helidon.io/docs/v2/se/webclient/01_introduction) based client.       | 
+| `gen-helidon-server` | `boolean` | `false` | Generate [Helidon SE WebServer](https://helidon.io/docs/v2/se/webserver/01_introduction) based server.       | 
+| `gen-apache-client`  | `boolean` | `false` | Generate [Apache HttpComponents](https://hc.apache.org/httpcomponents-client-4.5.x/index.html) based client. | 
