@@ -18,6 +18,7 @@ dependencies {
         api(project(":twirp-helidon-common"))
         api(project(":twirp-helidon-client"))
         api(project(":twirp-helidon-server"))
+        api(project(":twirp-apache-client"))
     }
 }
 

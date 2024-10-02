@@ -1,11 +1,10 @@
-package io.github.ngyewch.twirp.httpclient.client;
+package io.github.ngyewch.twirp.apache.client;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 import io.github.ngyewch.twirp.*;
 import java.io.IOException;
-import java.net.URI;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -18,28 +17,24 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 public abstract class AbstractService {
-  public static final ContentType PROTOBUF_CONTENT_TYPE =
-      ContentType.create("application/protobuf");
-  public static final ContentType JSON_CONTENT_TYPE = ContentType.create("application/json");
-
-  private final URI baseUri;
+  private final String baseUri;
   private final CloseableHttpClient httpClient;
-  private final ContentType contentType;
+  private final String contentType;
 
-  protected AbstractService(String baseUri, ContentType contentType) {
+  protected AbstractService(String baseUri, String contentType) {
     super();
 
-    this.baseUri = URI.create(baseUri);
+    this.baseUri = baseUri;
     this.httpClient = HttpClients.createDefault();
     this.contentType = contentType;
   }
 
   protected void doRequest(String path, Message input, Message.Builder outputBuilder) {
-    final URI uri = baseUri.resolve(path);
+    final String uri = baseUri + path;
     try {
-      if (contentType == PROTOBUF_CONTENT_TYPE) {
+      if (contentType.equals(Constants.PROTOBUF_CONTENT_TYPE)) {
         doProtobufRequest(uri, input, outputBuilder);
-      } else if (contentType == JSON_CONTENT_TYPE) {
+      } else if (contentType.equals(Constants.JSON_CONTENT_TYPE)) {
         doJsonRequest(uri, input, outputBuilder);
       } else {
         throw new IllegalArgumentException("unsupported content type");
@@ -49,9 +44,11 @@ public abstract class AbstractService {
     }
   }
 
-  private void doProtobufRequest(URI uri, Message input, Message.Builder outputBuilder)
+  private void doProtobufRequest(String uri, Message input, Message.Builder outputBuilder)
       throws IOException {
-    final HttpEntity requestBody = new ByteArrayEntity(input.toByteArray(), PROTOBUF_CONTENT_TYPE);
+    final HttpEntity requestBody =
+        new ByteArrayEntity(
+            input.toByteArray(), ContentType.create(Constants.PROTOBUF_CONTENT_TYPE));
     final HttpPost request = new HttpPost(uri);
     request.setEntity(requestBody);
     try (final CloseableHttpResponse response = httpClient.execute(request)) {
@@ -70,10 +67,11 @@ public abstract class AbstractService {
     }
   }
 
-  private void doJsonRequest(URI uri, Message input, Message.Builder outputBuilder)
+  private void doJsonRequest(String uri, Message input, Message.Builder outputBuilder)
       throws IOException {
     final HttpEntity requestBody =
-        new StringEntity(JsonFormat.printer().print(input), ContentType.APPLICATION_JSON);
+        new StringEntity(
+            JsonFormat.printer().print(input), ContentType.create(Constants.JSON_CONTENT_TYPE));
     final HttpPost request = new HttpPost(uri);
     request.setEntity(requestBody);
     try (final CloseableHttpResponse response = httpClient.execute(request)) {

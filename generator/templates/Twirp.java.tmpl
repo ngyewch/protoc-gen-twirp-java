@@ -64,4 +64,39 @@ public class {{.JavaOuterClassName}} {
     {{end}}
   }
   {{end}}
+
+  {{if .Options.GenerateApacheClient}}
+  public static class Apache {
+    {{if .Options.GenerateApacheClient}}
+    public static class Client {
+      {{range .ProtoFile.Services}}
+      public static class {{.JavaClassName}} extends io.github.ngyewch.twirp.apache.client.AbstractService implements {{$.JavaOuterClassName}}.{{.JavaClassName}} {
+        private {{.JavaClassName}}(String baseUri, String contentType) {
+          super(baseUri, contentType);
+        }
+
+        public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newProtobufClient(String baseUri) {
+          return new {{.JavaClassName}}(baseUri, io.github.ngyewch.twirp.Constants.PROTOBUF_CONTENT_TYPE);
+        }
+
+        public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newJSONClient(String baseUri) {
+          return new {{.JavaClassName}}(baseUri, io.github.ngyewch.twirp.Constants.JSON_CONTENT_TYPE);
+        }
+        {{range .Methods}}
+        {{if not (or .Descriptor.IsStreamingClient .Descriptor.IsStreamingServer)}}
+        {{$requestType := (index .JavaMethod.Arguments 0).Type}}
+        @Override
+        public {{.JavaMethod.ReturnType}} {{.JavaMethod.Name}}({{$requestType}} input) {
+          final {{.JavaMethod.ReturnType}}.Builder outputBuilder = {{.JavaMethod.ReturnType}}.newBuilder();
+          doRequest("{{.TwirpPath}}", input, outputBuilder);
+          return outputBuilder.build();
+        }
+        {{end}}
+        {{end}}
+      }
+      {{end}}
+    }
+    {{end}}
+  }
+  {{end}}
 }

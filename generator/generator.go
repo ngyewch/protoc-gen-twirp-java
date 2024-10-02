@@ -14,6 +14,7 @@ type Generator struct {
 type Options struct {
 	GenerateHelidonClient bool
 	GenerateHelidonServer bool
+	GenerateApacheClient  bool
 }
 
 type TemplateData struct {
