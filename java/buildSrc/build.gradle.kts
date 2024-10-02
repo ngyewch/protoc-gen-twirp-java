@@ -2,6 +2,14 @@ plugins {
     `java-gradle-plugin`
 }
 
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("org.apache.commons:commons-lang3:3.17.0")
+}
+
 gradlePlugin {
     plugins {
         create("protocPlugin") {

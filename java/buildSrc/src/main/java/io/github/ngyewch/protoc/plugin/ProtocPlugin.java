@@ -2,6 +2,8 @@ package io.github.ngyewch.protoc.plugin;
 
 import java.io.File;
 import javax.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -82,12 +84,16 @@ public class ProtocPlugin implements Plugin<Project> {
                   taskName,
                   Exec.class,
                   task -> {
-                    task.doFirst(
-                        t -> {
-                          outputExeFile.getParentFile().mkdirs();
-                        });
+                    task.doFirst(t -> outputExeFile.getParentFile().mkdirs());
                     task.getOutputs().file(outputExeFile);
-                    task.commandLine("go", "build", "-o", outputExeFile, "../..");
+                    final Object[] commandArgs =
+                        new Object[] {"go", "build", "-o", outputExeFile, "../.."};
+                    // task.commandLine(commandArgs);
+                    if (SystemUtils.IS_OS_WINDOWS) {
+                      task.commandLine("cmd", "/c", StringUtils.join(commandArgs, " "));
+                    } else {
+                      task.commandLine("/bin/sh", "-c", StringUtils.join(commandArgs, " "));
+                    }
                     task.environment("GOOS", buildParameters.getGoos());
                     task.environment("GOARCH", buildParameters.getGoarch());
                   });
