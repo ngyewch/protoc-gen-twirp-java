@@ -3,11 +3,7 @@ package io.github.ngyewch.twirp.helidon.client;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
-import io.github.ngyewch.twirp.Meta;
-import io.github.ngyewch.twirp.TwirpError;
-import io.github.ngyewch.twirp.TwirpErrorCode;
-import io.github.ngyewch.twirp.TwirpException;
-import io.github.ngyewch.twirp.helidon.MediaTypes;
+import io.github.ngyewch.twirp.*;
 import io.helidon.common.http.Http;
 import io.helidon.common.http.MediaType;
 import io.helidon.common.reactive.Single;
@@ -18,6 +14,9 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 public abstract class AbstractService {
+  protected static final MediaType PROTOBUF_MEDIA_TYPE =
+      MediaType.parse(Constants.PROTOBUF_CONTENT_TYPE);
+  protected static final MediaType JSON_MEDIA_TYPE = MediaType.parse(Constants.JSON_CONTENT_TYPE);
   private final WebClient webClient;
   private final MediaType contentType;
 
@@ -30,9 +29,9 @@ public abstract class AbstractService {
 
   protected void doRequest(String path, Message input, Message.Builder outputBuilder) {
     final Single<Message.Builder> requester;
-    if (contentType.equals(MediaTypes.PROTOBUF_MEDIA_TYPE)) {
+    if (contentType.equals(PROTOBUF_MEDIA_TYPE)) {
       requester = doProtobufRequest(path, input, outputBuilder);
-    } else if (contentType.equals(MediaTypes.JSON_MEDIA_TYPE)) {
+    } else if (contentType.equals(JSON_MEDIA_TYPE)) {
       requester = doJsonRequest(path, input, outputBuilder);
     } else {
       throw new IllegalArgumentException("unsupported content type");
@@ -59,12 +58,11 @@ public abstract class AbstractService {
     return webClient
         .post()
         .path(path)
-        .contentType(MediaTypes.PROTOBUF_MEDIA_TYPE)
+        .contentType(PROTOBUF_MEDIA_TYPE)
         .submit(input.toByteArray())
         .flatMap(this::handleNonSuccessfulResponse)
         .first()
-        .flatMap(
-            webClientResponse -> expectMediaType(webClientResponse, MediaTypes.PROTOBUF_MEDIA_TYPE))
+        .flatMap(webClientResponse -> expectMediaType(webClientResponse, PROTOBUF_MEDIA_TYPE))
         .first()
         .flatMap(webClientResponse -> webClientResponse.content().as(byte[].class))
         .first()
@@ -78,12 +76,11 @@ public abstract class AbstractService {
       return webClient
           .post()
           .path(path)
-          .contentType(MediaTypes.JSON_MEDIA_TYPE)
+          .contentType(JSON_MEDIA_TYPE)
           .submit(requestJson)
           .flatMap(this::handleNonSuccessfulResponse)
           .first()
-          .flatMap(
-              webClientResponse -> expectMediaType(webClientResponse, MediaTypes.JSON_MEDIA_TYPE))
+          .flatMap(webClientResponse -> expectMediaType(webClientResponse, JSON_MEDIA_TYPE))
           .first()
           .flatMap(webClientResponse -> webClientResponse.content().as(String.class))
           .first()
@@ -99,7 +96,7 @@ public abstract class AbstractService {
       return Single.just(webClientResponse);
     }
     final MediaType mediaType = webClientResponse.headers().contentType().orElse(null);
-    if ((mediaType != null) && mediaType.equals(MediaTypes.JSON_MEDIA_TYPE)) { // Twirp error
+    if ((mediaType != null) && mediaType.equals(JSON_MEDIA_TYPE)) { // Twirp error
       return webClientResponse
           .content()
           .as(String.class)

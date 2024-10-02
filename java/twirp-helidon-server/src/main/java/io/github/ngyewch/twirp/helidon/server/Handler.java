@@ -3,9 +3,9 @@ package io.github.ngyewch.twirp.helidon.server;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
+import io.github.ngyewch.twirp.Constants;
 import io.github.ngyewch.twirp.TwirpError;
 import io.github.ngyewch.twirp.TwirpErrorCode;
-import io.github.ngyewch.twirp.helidon.MediaTypes;
 import io.helidon.common.http.MediaType;
 import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;
@@ -16,6 +16,10 @@ import java.util.function.Supplier;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 public class Handler {
+  private static final MediaType PROTOBUF_MEDIA_TYPE =
+      MediaType.parse(Constants.PROTOBUF_CONTENT_TYPE);
+  private static final MediaType JSON_MEDIA_TYPE = MediaType.parse(Constants.JSON_CONTENT_TYPE);
+
   public static void handleTwirp(
       ServerRequest req,
       ServerResponse res,
@@ -26,7 +30,7 @@ public class Handler {
       return;
     }
     final MediaType contentType = req.headers().contentType().get();
-    if (contentType.equals(MediaTypes.PROTOBUF_MEDIA_TYPE)) {
+    if (contentType.equals(PROTOBUF_MEDIA_TYPE)) {
       req.content()
           .as(byte[].class)
           .thenAccept(
@@ -46,7 +50,7 @@ public class Handler {
                       Collections.singletonMap("stackTrace", ExceptionUtils.getStackTrace(e)));
                 }
               });
-    } else if (contentType.equals(MediaTypes.JSON_MEDIA_TYPE)) {
+    } else if (contentType.equals(JSON_MEDIA_TYPE)) {
       req.content()
           .as(String.class)
           .thenAccept(
@@ -81,7 +85,7 @@ public class Handler {
       error.setMsg(msg);
       error.setMeta(meta);
       final String errorJson = TwirpError.toJson(error);
-      res.headers().contentType(MediaTypes.JSON_MEDIA_TYPE);
+      res.headers().contentType(JSON_MEDIA_TYPE);
       res.send(errorJson);
     } catch (IOException e) {
       res.send();

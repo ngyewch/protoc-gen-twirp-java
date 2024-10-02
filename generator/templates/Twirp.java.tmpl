@@ -22,11 +22,11 @@ public class {{.JavaOuterClassName}} {
         }
 
         public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newProtobufClient(String baseUri) {
-          return new {{.JavaClassName}}(baseUri, io.github.ngyewch.twirp.helidon.MediaTypes.PROTOBUF_MEDIA_TYPE);
+          return new {{.JavaClassName}}(baseUri, PROTOBUF_MEDIA_TYPE);
         }
 
         public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newJSONClient(String baseUri) {
-          return new {{.JavaClassName}}(baseUri, io.github.ngyewch.twirp.helidon.MediaTypes.JSON_MEDIA_TYPE);
+          return new {{.JavaClassName}}(baseUri, JSON_MEDIA_TYPE);
         }
         {{range .Methods}}
         {{if not (or .Descriptor.IsStreamingClient .Descriptor.IsStreamingServer)}}

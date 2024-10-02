@@ -15,7 +15,6 @@ dependencies {
 
     constraints {
         api(project(":twirp-common"))
-        api(project(":twirp-helidon-common"))
         api(project(":twirp-helidon-client"))
         api(project(":twirp-helidon-server"))
         api(project(":twirp-apache-client"))
@@ -58,6 +57,9 @@ publishing {
 }
 
 signing {
+    setRequired({
+        gradle.taskGraph.hasTask("publish")
+    })
     useGpgCmd()
     sign(publishing.publications["maven"])
 }

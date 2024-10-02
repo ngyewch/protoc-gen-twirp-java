@@ -22,7 +22,6 @@ dependencies {
     api(platform(project(":twirp-bom")))
 
     api(project(":twirp-common"))
-    implementation(project(":twirp-helidon-common"))
 
     api("com.google.protobuf:protobuf-java")
     implementation("com.google.protobuf:protobuf-java-util")
@@ -69,6 +68,9 @@ publishing {
 }
 
 signing {
+    setRequired({
+        gradle.taskGraph.hasTask("publish")
+    })
     useGpgCmd()
     sign(publishing.publications["maven"])
 }
