@@ -5,8 +5,10 @@ import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 import io.github.ngyewch.twirp.*;
 import java.io.IOException;
+import java.time.Duration;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
@@ -22,11 +24,29 @@ public abstract class AbstractService {
   private final String contentType;
 
   protected AbstractService(String baseUri, String contentType) {
+    this(baseUri, contentType, (CloseableHttpClient) null);
+  }
+
+  protected AbstractService(String baseUri, String contentType, Duration timeout) {
+    this(baseUri, contentType, newHttpClient(timeout));
+  }
+
+  protected AbstractService(String baseUri, String contentType, CloseableHttpClient httpClient) {
     super();
 
     this.baseUri = baseUri;
-    this.httpClient = HttpClients.createDefault();
     this.contentType = contentType;
+    this.httpClient = (httpClient != null) ? httpClient : HttpClients.createDefault();
+  }
+
+  private static CloseableHttpClient newHttpClient(Duration timeout) {
+    final RequestConfig requestConfig =
+        RequestConfig.custom()
+            .setConnectTimeout((int) timeout.toMillis())
+            .setConnectionRequestTimeout((int) timeout.toMillis())
+            .setSocketTimeout((int) timeout.toMillis())
+            .build();
+    return HttpClients.custom().setDefaultRequestConfig(requestConfig).build();
   }
 
   protected void doRequest(String path, Message input, Message.Builder outputBuilder) {
