@@ -75,12 +75,36 @@ public class {{.JavaOuterClassName}} {
           super(baseUri, contentType);
         }
 
+        private {{.JavaClassName}}(String baseUri, String contentType, java.time.Duration timeout) {
+          super(baseUri, contentType, timeout);
+        }
+
+        private {{.JavaClassName}}(String baseUri, String contentType, org.apache.http.impl.client.CloseableHttpClient httpClient) {
+          super(baseUri, contentType, httpClient);
+        }
+
         public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newProtobufClient(String baseUri) {
           return new {{.JavaClassName}}(baseUri, io.github.ngyewch.twirp.Constants.PROTOBUF_CONTENT_TYPE);
         }
 
+        public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newProtobufClient(String baseUri, java.time.Duration timeout) {
+          return new {{.JavaClassName}}(baseUri, io.github.ngyewch.twirp.Constants.PROTOBUF_CONTENT_TYPE, timeout);
+        }
+
+        public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newProtobufClient(String baseUri, org.apache.http.impl.client.CloseableHttpClient httpClient) {
+          return new {{.JavaClassName}}(baseUri, io.github.ngyewch.twirp.Constants.PROTOBUF_CONTENT_TYPE, httpClient);
+        }
+
         public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newJSONClient(String baseUri) {
           return new {{.JavaClassName}}(baseUri, io.github.ngyewch.twirp.Constants.JSON_CONTENT_TYPE);
+        }
+
+        public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newJSONClient(String baseUri, java.time.Duration timeout) {
+          return new {{.JavaClassName}}(baseUri, io.github.ngyewch.twirp.Constants.JSON_CONTENT_TYPE, timeout);
+        }
+
+        public static {{$.JavaOuterClassName}}.{{.JavaClassName}} newJSONClient(String baseUri, org.apache.http.impl.client.CloseableHttpClient httpClient) {
+          return new {{.JavaClassName}}(baseUri, io.github.ngyewch.twirp.Constants.JSON_CONTENT_TYPE, httpClient);
         }
         {{range .Methods}}
         {{if not (or .Descriptor.IsStreamingClient .Descriptor.IsStreamingServer)}}
