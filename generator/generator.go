@@ -2,8 +2,9 @@ package generator
 
 import (
 	"bytes"
-	"google.golang.org/protobuf/compiler/protogen"
 	"text/template"
+
+	"google.golang.org/protobuf/compiler/protogen"
 )
 
 type Generator struct {

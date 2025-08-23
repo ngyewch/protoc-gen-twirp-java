@@ -1,11 +1,12 @@
 package generator
 
 import (
+	"path/filepath"
+	"strings"
+
 	"github.com/iancoleman/strcase"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
-	"path/filepath"
-	"strings"
 )
 
 type FileDescriptorWrapper struct {

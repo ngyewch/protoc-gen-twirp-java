@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+
 	"github.com/ngyewch/protoc-gen-twirp-java/generator"
 	"google.golang.org/protobuf/compiler/protogen"
 )
