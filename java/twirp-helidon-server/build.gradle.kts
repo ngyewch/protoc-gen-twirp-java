@@ -29,7 +29,7 @@ dependencies {
     implementation("io.helidon.common:helidon-common-reactive")
     implementation("io.helidon.media:helidon-media-common")
     api("io.helidon.webserver:helidon-webserver")
-    implementation("org.apache.commons:commons-lang3:3.17.0")
+    implementation("org.apache.commons:commons-lang3:3.19.0")
 }
 
 publishing {

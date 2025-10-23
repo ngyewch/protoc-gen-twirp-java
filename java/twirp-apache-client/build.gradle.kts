@@ -25,7 +25,8 @@ dependencies {
 
     api("com.google.protobuf:protobuf-java")
     implementation("com.google.protobuf:protobuf-java-util")
-    implementation("org.apache.httpcomponents:httpclient:4.5.14")
+    implementation("org.apache.httpcomponents:httpcore:4.4.16")
+    api("org.apache.httpcomponents:httpclient:4.5.14")
 }
 
 publishing {
