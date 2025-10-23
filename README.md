@@ -26,7 +26,7 @@ plugins {
 }
 
 dependencies {
-    implementation(platform("io.github.ngyewch.twirp:twirp-bom:0.3.0"))
+    implementation(platform("io.github.ngyewch.twirp:twirp-bom:0.5.0"))
 
     // Protobuf
     implementation("com.google.protobuf:protobuf-java")
@@ -55,11 +55,11 @@ dependencies {
 protobuf {
     plugins {
         id("twirp-java") {
-            artifact = "io.github.ngyewch.twirp:protoc-gen-twirp-java:0.3.0"
+            artifact = "io.github.ngyewch.twirp:protoc-gen-twirp-java:0.5.0"
         }
     }
     protoc {
-        artifact = "com.google.protobuf:protoc:4.28.2"
+        artifact = "com.google.protobuf:protoc:4.29.5"
     }
     generateProtoTasks {
         ofSourceSet("main").forEach {
